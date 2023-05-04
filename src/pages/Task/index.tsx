@@ -7,14 +7,14 @@ import Generator from 'fr-generator';
 import { Button ,Modal,Input,Spin } from 'antd';
 import { queryTask,completeTask ,taskAssign,suspendTask,unsuspendTask,forwardTask} from '@/services/index'
 import React, { useEffect, useState } from 'react';
-import { Radio, Space, Table, Tag, message } from 'antd';
+import { Radio, Space, Table, Tag, message,Popover } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import FormRender, { useForm } from 'form-render'
 const { Search } = Input;
 
 
-const createFormConfig = {"type":"object","labelWidth":120,"displayType":"row","properties":{"name":{"title":"任务名称","type":"string","required":true,"props":{}},"checkRule":{"title":"完成条件","type":"string","enum":["percentage"],"enumNames":["按照百分比"],"widget":"select","default":"percentage"},"threshold":{"title":"百分比","type":"number","widget":"slider","default":100},"allocator":{"title":"分配方式","type":"string","enum":["serial","parallel"],"enumNames":["顺序","并发"],"widget":"select","default":"serial"},"order":{"title":"顺序","description":"多选","type":"array","items":{"type":"string"},"enum":["015754","011114","012901","011330"],"enumNames":["015754","011114","012901","011330"],"widget":"multiSelect","required":true}},"executors":{"title":"执行人","description":"多选","type":"array","items":{"type":"string"},"enum":["015754","011114","012901","011330"],"enumNames":["015754","011114","012901","011330"],"widget":"multiSelect","required":true}}
-const forwardFormConfig={"type":"object","labelWidth":120,"displayType":"row","properties":{"executor":{"title":"执行人","description":"","type":"string","items":{"type":"string"},"enum":["015754","011114","012901","011330"],"enumNames":["015754","011114","012901","011330"],"widget":"select","required":true}}}
+const createFormConfig = { "type": "object", "labelWidth": 120, "displayType": "row", "properties": { "name": { "title": "任务名称", "type": "string", "required": true, "props": {} }, "checkRule": { "title": "完成条件", "type": "string", "enum": ["percentage"], "enumNames": ["按照百分比"], "widget": "select", "default": "percentage" }, "threshold": { "title": "百分比", "type": "number", "widget": "slider", "default": 100 }, "allocator": { "title": "分配方式", "type": "string", "enum": ["serial", "parallel"], "enumNames": ["顺序", "并发"], "widget": "select", "default": "serial" }, "order": { "title": "顺序", "description": "多选", "type": "array", "items": { "type": "string" }, "enum": ["015754", "011114", "012901", "011330"], "enumNames": ["015754", "011114", "012901", "011330"], "widget": "multiSelect", "required": true }, "executors": { "title": "执行人", "description": "多选", "type": "array", "items": { "type": "string" }, "enum": ["015754", "011114", "012901", "011330"], "enumNames": ["015754", "011114", "012901", "011330"], "widget": "multiSelect", "required": true } }}
+const forwardFormConfig={"type":"object","labelWidth":120,"displayType":"row","properties":{"other":{"title":"执行人","description":"","type":"string","items":{"type":"string"},"enum":["015754","011114","012901","011330"],"enumNames":["015754","011114","012901","011330"],"widget":"select","required":true}}}
 let forwardTaskId = ''
 interface DataType {
   key: string;
@@ -23,7 +23,8 @@ interface DataType {
   address: string;
   tags: string[];
   taskId:string;
-  executionStatus:string
+  executionStatus:string;
+  executionId:string
 }
 
 type TablePaginationPosition =
@@ -52,42 +53,87 @@ const App: React.FC = () => {
   },[])
   
   const columns: ColumnsType<DataType> = [
+    // {
+    //   title: '任务ID',
+    //   dataIndex: 'taskId',
+    //   key: 'taskId',
+    //   // render: (text) => <a>{text}</a>,
+    // },
     {
-      title: '任务ID',
-      dataIndex: 'taskId',
-      key: 'taskId',
-      render: (text) => <a>{text}</a>,
-    },{
-      title: '执行ID',
-      dataIndex: 'executionId',
-      key: 'executionId',
-      render: (text) => <a>{text}</a>,
-    },{
-      title: '执行状态',
-      dataIndex: 'executionStatus',
-      key: 'executionStatus',
-      render: (text) => <a>{text}</a>,
-    },{
-      title: '执行人',
-      dataIndex: 'executor',
-      key: 'executor',
-      render: (text) => <a>{text}</a>,
+      title: '标题',
+      dataIndex: 'taskName',
+      key: 'taskName',
+      render: (text,row) => <Popover title={<div>任务ID:{row.taskId}<br/>执行ID:{row.executionId}</div>}><a>{text}</a></Popover>,
+      filterSearch:true
     },{
       title: '优先级',
       dataIndex: 'priority',
       key: 'priority',
-      render: (text) => <a>{text}</a>,
-    },{
-      title: '标题',
-      dataIndex: 'taskName',
-      key: 'taskName',
-      render: (text) => <a>{text}</a>,
+      // render: (text) => <a>{text}</a>,
     },{
       title: '状态',
       dataIndex: 'taskStatus',
       key: 'taskStatus',
-      render: (text) => <a>{text}</a>,
+      // render: (text) => <a>{text}</a>,
     },{
+      title: '任务创建时间',
+      dataIndex: 'taskCreateTime',
+      key: 'taskCreateTime',
+      render: (text) => new Date(text).toLocaleString(),
+    },{
+      title: '创建人',
+      dataIndex: 'originator',
+      key: 'originator',
+      // render: (text) => <a>{text}</a>,
+    },
+    // {
+    //   title: '执行ID',
+    //   dataIndex: 'executionId',
+    //   key: 'executionId',
+    //   render: (text) => new Date(text).toLocaleString(),
+    // },
+    {
+      title: '执行时间',
+      dataIndex: 'executionCreateTime',
+      key: 'executionCreateTime',
+      render: (text) => new Date(text).toLocaleString(),
+      // render: (text) => <a>{text}</a>,
+    },{
+      title: '执行状态',
+      dataIndex: 'executionStatus',
+      key: 'executionStatus',
+      // render: (text) => <a>{text}</a>,
+      filters:[
+        {
+          text:'已完成',
+          value:'COMPLETED'
+        }, {
+          text:'未完成',
+          value:'!COMPLETED'
+        },
+        {
+          text:'已搁置',
+          value:'SUSPENDED'
+        }
+      ],
+      // defaultFilteredValue:['!COMPLETED'],
+      onFilter: (value: any, record:DataType) => {
+        if (value.startsWith('!')){
+          let newValue = value.substr(1,value.length)
+          return record.executionStatus.indexOf(newValue) < 0
+        } else {
+          return record.executionStatus.indexOf(value) >= 0
+        }
+        
+      },
+    },
+    // {
+    //   title: '执行人',
+    //   dataIndex: 'executor',
+    //   key: 'executor',
+    //   // render: (text) => <a>{text}</a>,
+    // },
+    {
       title: '操作',
       dataIndex: 'taskStatus',
       key: 'taskStatus',
@@ -169,7 +215,7 @@ const App: React.FC = () => {
       newForm.threshold = newForm.threshold/100
     }
     
-    let res = await taskAssign({...newForm,zeebeJobKey:-1})
+    let res = await taskAssign({...newForm,zeebeJobKey:-1,originator:userId,createTime:Date.now()})
     if (res){
 
     }
@@ -181,7 +227,7 @@ const App: React.FC = () => {
   const handleOkForward = async (form:any,)=>{
 
     let newForm = JSON.parse(JSON.stringify(form))
-    let res = await forwardTask({...newForm,taskId:forwardTaskId})
+    let res = await forwardTask({...newForm,taskId:forwardTaskId,executor:userId})
     if (res){
       message.error(JSON.stringify(res?.statusText))
     }
